@@ -186,5 +186,8 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 // git remote add origin https://github.com/trey-a-hope/simple-library.git
+// OR
 // git remote set-url origin https://github.com/trey-a-hope/simple-library.git
+// git add .  
+// git commit . -m 'Updated mongodb connection string.'
 // git push -u origin main       
