@@ -186,4 +186,5 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 // git remote add origin https://github.com/trey-a-hope/simple-library.git
+// git remote set-url origin https://github.com/trey-a-hope/simple-library.git
 // git push -u origin main       

@@ -74,6 +74,7 @@ const { url } = await startStandaloneServer(server, {
 console.log(`Server is ready at ${url}`);
 
 // Process for pushing changes to Heroku...
+// heroku git:remote -a books-demo-apollo-server
 // git add .  
 // git commit . -m 'Updated mongodb connection string.'
-// git push heroku main
+// git push -f heroku main
