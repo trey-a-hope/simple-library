@@ -20,8 +20,8 @@ const typeDefs = `#graphql
     }
 
     type Query {
-        getBook(ID: ID!): Book!
-        getBooks(limit: Int): [Book]
+        getBook(ID: ID!): Book
+        getBooks(limit: Int): [Book]!
     }
 
     type Mutation {
