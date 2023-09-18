@@ -1,6 +1,6 @@
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:simple_library/book_model.dart';
-import 'package:simple_library/graphql_config.dart';
+import 'package:simple_library/domain/models/book_model.dart';
+import 'package:simple_library/util/config/graphql_config.dart';
 
 class GraphQLService {
   static GraphQLConfig graphQLConfig = GraphQLConfig();
@@ -38,10 +38,10 @@ class GraphQLService {
           return [];
         }
 
-        List<BookModel> feelings =
-            res.map((feeling) => BookModel.fromMap(map: feeling)).toList();
+        List<BookModel> books =
+            res.map((book) => BookModel.fromMap(map: book)).toList();
 
-        return feelings;
+        return books;
       }
     } catch (error) {
       return [];
@@ -76,7 +76,7 @@ class GraphQLService {
   Future<bool> createBook({
     required String title,
     required String author,
-    required int year,
+    required DateTime year,
   }) async {
     try {
       QueryResult result = await client.mutate(
@@ -91,7 +91,7 @@ class GraphQLService {
             "bookInput": {
               "title": title,
               "author": author,
-              "year": year,
+              "year": year.toIso8601String(),
             }
           },
         ),
@@ -111,7 +111,7 @@ class GraphQLService {
     required String id,
     required String title,
     required String author,
-    required int year,
+    required DateTime year,
   }) async {
     try {
       QueryResult result = await client.mutate(
@@ -129,7 +129,7 @@ class GraphQLService {
             "bookInput": {
               "title": title,
               "author": author,
-              "year": year,
+              "year": year.toIso8601String(),
             }
           },
         ),
