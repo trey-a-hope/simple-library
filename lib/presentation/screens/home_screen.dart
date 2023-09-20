@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_chip_tags/flutter_chip_tags.dart';
 import 'package:simple_library/util/extensions/date_format_extensions.dart';
 import 'package:simple_library/domain/models/book_model.dart';
 import 'package:simple_library/data/services/graphql_service.dart';
 import 'package:simple_library/presentation/widgets/full_button.dart';
+
+enum DateSelection {
+  release,
+  start,
+  end,
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,8 +31,12 @@ class _HomeScreenState extends State<HomeScreen>
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _authorController = TextEditingController();
   final TextEditingController _releasedController = TextEditingController();
+  final TextEditingController _startController = TextEditingController();
+  final TextEditingController _endController = TextEditingController();
 
-  DateTime? _releaseDate;
+  List<String> _ids = [];
+
+  DateTime? _releaseDate, _startDate, _endDate;
 
   @override
   void initState() {
@@ -49,7 +60,9 @@ class _HomeScreenState extends State<HomeScreen>
     _releasedController.clear();
   }
 
-  Future<void> _selectDate(BuildContext context) async {
+  Future<void> _selectDate(
+      {required DateSelection dateSelection,
+      required BuildContext context}) async {
     DateTime? selectedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -58,9 +71,20 @@ class _HomeScreenState extends State<HomeScreen>
     );
 
     if (selectedDate != null && selectedDate != DateTime.now()) {
-      _releaseDate = selectedDate;
-      String formattedDate = selectedDate.formatMMMddyyyy();
-      _releasedController.text = formattedDate;
+      switch (dateSelection) {
+        case DateSelection.release:
+          _releaseDate = selectedDate;
+          _releasedController.text = selectedDate.formatMMMddyyyy();
+          break;
+        case DateSelection.start:
+          _startDate = selectedDate;
+          _startController.text = selectedDate.formatMMMddyyyy();
+          break;
+        case DateSelection.end:
+          _endDate = selectedDate;
+          _endController.text = selectedDate.formatMMMddyyyy();
+          break;
+      }
     }
   }
 
@@ -169,7 +193,11 @@ class _HomeScreenState extends State<HomeScreen>
                                           hintText: 'Year',
                                         ),
                                         onTap: () {
-                                          _selectDate(context);
+                                          _selectDate(
+                                            dateSelection:
+                                                DateSelection.release,
+                                            context: context,
+                                          );
                                         },
                                       ),
                                     )
@@ -204,15 +232,84 @@ class _HomeScreenState extends State<HomeScreen>
                                           hintText: 'Year',
                                         ),
                                         onTap: () {
-                                          _selectDate(context);
+                                          _selectDate(
+                                            dateSelection:
+                                                DateSelection.release,
+                                            context: context,
+                                          );
                                         },
                                       ),
                                     )
                                   ],
                                 ),
-                                Center(
-                                  child: Text('Filter Content'),
-                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      children: [
+                                        ChipTags(
+                                          list: _ids,
+                                          createTagOnSubmit: true,
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: TextField(
+                                            controller: _releasedController,
+                                            decoration: const InputDecoration(
+                                              hintText: 'Author',
+                                            ),
+                                          ),
+                                        ),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: TextField(
+                                                  controller: _startController,
+                                                  readOnly: true,
+                                                  decoration:
+                                                      const InputDecoration(
+                                                    hintText: 'Start Date',
+                                                  ),
+                                                  onTap: () {
+                                                    _selectDate(
+                                                      dateSelection:
+                                                          DateSelection.start,
+                                                      context: context,
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: TextField(
+                                                  controller: _endController,
+                                                  readOnly: true,
+                                                  decoration:
+                                                      const InputDecoration(
+                                                    hintText: 'End Date',
+                                                  ),
+                                                  onTap: () {
+                                                    _selectDate(
+                                                      dateSelection:
+                                                          DateSelection.end,
+                                                      context: context,
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                )
                               ],
                             ),
                           ),
