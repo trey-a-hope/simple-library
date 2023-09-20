@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class FullButton extends StatelessWidget {
+class FullButtonWidget extends StatelessWidget {
   final void Function()? onPressed;
   final String title;
   final Color backgroundColor;
 
-  const FullButton({
+  const FullButtonWidget({
     required this.onPressed,
     required this.title,
     required this.backgroundColor,

@@ -1,6 +1,6 @@
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:simple_library/book_model.dart';
-import 'package:simple_library/graphql_config.dart';
+import 'package:simple_library/domain/models/book_model.dart';
+import 'package:simple_library/util/config/graphql_config.dart';
 
 class GraphQLService {
   static GraphQLConfig graphQLConfig = GraphQLConfig();
@@ -38,10 +38,10 @@ class GraphQLService {
           return [];
         }
 
-        List<BookModel> feelings =
-            res.map((feeling) => BookModel.fromMap(map: feeling)).toList();
+        List<BookModel> books =
+            res.map((book) => BookModel.fromMap(map: book)).toList();
 
-        return feelings;
+        return books;
       }
     } catch (error) {
       return [];
@@ -76,7 +76,7 @@ class GraphQLService {
   Future<bool> createBook({
     required String title,
     required String author,
-    required int year,
+    required DateTime year,
   }) async {
     try {
       QueryResult result = await client.mutate(
@@ -91,7 +91,7 @@ class GraphQLService {
             "bookInput": {
               "title": title,
               "author": author,
-              "year": year,
+              "year": year.toIso8601String(),
             }
           },
         ),
@@ -111,7 +111,7 @@ class GraphQLService {
     required String id,
     required String title,
     required String author,
-    required int year,
+    required DateTime year,
   }) async {
     try {
       QueryResult result = await client.mutate(
@@ -129,7 +129,7 @@ class GraphQLService {
             "bookInput": {
               "title": title,
               "author": author,
-              "year": year,
+              "year": year.toIso8601String(),
             }
           },
         ),
@@ -140,6 +140,94 @@ class GraphQLService {
       }
     } catch (error) {
       throw Exception(error);
+    }
+  }
+
+  Future<List<BookModel>> books({
+    int? limit,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? author,
+    List<String> ids = const [],
+  }) async {
+    var input = {};
+    var filter = {};
+
+    bool shouldAddLimit = limit != null;
+
+    bool shouldAddFilter = !(startDate == null &&
+        endDate == null &&
+        author == null &&
+        ids.isEmpty);
+
+    if (shouldAddLimit) {
+      // Add limit to the input map.
+      input.addAll({'limit': limit});
+    }
+
+    if (shouldAddFilter) {
+      // If filtering on start and end date...
+      if (startDate != null && endDate != null) {
+        filter.addAll({
+          "endDate": endDate.toIso8601String(),
+          "startDate": startDate.toIso8601String(),
+        });
+      }
+
+      // If filtering on author.
+      if (author != null) {
+        filter.addAll({
+          "author": author,
+        });
+      }
+
+      // If filtering on ids.
+      if (ids.isNotEmpty) {
+        filter.addAll({
+          "ids": ids,
+        });
+      }
+
+      // Add filters to the input map.
+      input.addAll({'filter': filter});
+    }
+
+    try {
+      QueryResult result = await client.query(
+        QueryOptions(
+          fetchPolicy: FetchPolicy.noCache,
+          document: gql("""
+            query Query(\$input: BookFiltersInput) {
+              books(input: \$input) {
+                _id
+                author
+                title
+                year
+              }
+            }
+            """),
+          variables: {
+            'input': input,
+          },
+        ),
+      );
+
+      if (result.hasException) {
+        throw Exception(result.exception);
+      } else {
+        List? res = result.data?['books'];
+
+        if (res == null || res.isEmpty) {
+          return [];
+        }
+
+        List<BookModel> books =
+            res.map((book) => BookModel.fromMap(map: book)).toList();
+
+        return books;
+      }
+    } catch (error) {
+      return [];
     }
   }
 }
