@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chip_tags/flutter_chip_tags.dart';
+import 'package:simple_library/presentation/widgets/book_list_tile_widget.dart';
 import 'package:simple_library/util/extensions/date_format_extensions.dart';
 import 'package:simple_library/domain/models/book_model.dart';
 import 'package:simple_library/data/services/graphql_service.dart';
-import 'package:simple_library/presentation/widgets/full_button.dart';
+import 'package:simple_library/presentation/widgets/full_button_widget.dart';
+import 'package:simple_library/util/extensions/string_extensions.dart';
 
 enum DateSelection {
   release,
@@ -34,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen>
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _endController = TextEditingController();
 
-  List<String> _ids = [];
+  final List<String> _ids = [];
 
   DateTime? _releaseDate, _startDate, _endDate;
 
@@ -50,10 +52,19 @@ class _HomeScreenState extends State<HomeScreen>
   void _load() async {
     _books = null;
 
-    _books = await _graphQLService.getBooks(limit: 10);
-    setState(() {});
+    // _books = await _graphQLService.getBooks(limit: 10);
+    List<BookModel> books = await _graphQLService.books(
+      limit: 10,
+      startDate: _startDate,
+      endDate: _endDate,
+      ids: _ids,
+      author: _authorController.text.isEmpty ? null : _authorController.text,
+    );
+
+    setState(() => _books = books);
   }
 
+  // Clear all of the input fields.
   void _clear() {
     _titleController.clear();
     _authorController.clear();
@@ -91,6 +102,11 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _titleController.dispose();
+    _authorController.dispose();
+    _releasedController.dispose();
+    _startController.dispose();
+    _endController.dispose();
     super.dispose();
   }
 
@@ -115,32 +131,21 @@ class _HomeScreenState extends State<HomeScreen>
                         : ListView.builder(
                             itemCount: _books!.length,
                             itemBuilder: (BuildContext context, int index) =>
-                                ListTile(
-                              leading: const Icon(Icons.book),
+                                BookListTileWidget(
                               onTap: () {
                                 _selectedBook = _books![index];
                                 _titleController.text = _selectedBook!.title;
                                 _authorController.text = _selectedBook!.author;
                                 _releasedController.text =
                                     _selectedBook!.year.formatMMMddyyyy();
+                                _releaseDate = _selectedBook!.year;
                               },
-                              title: Text(
-                                '${_books![index].title} by ${_books![index].author}',
-                              ),
-                              subtitle: Text(
-                                'Released ${_books![index].year.formatMMMddyyyy()}',
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () async {
-                                  await _graphQLService.deleteBook(
-                                      id: _books![index].id!);
-                                  _load();
-                                },
-                              ),
+                              book: _books![index],
+                              delete: () async {
+                                await _graphQLService.deleteBook(
+                                    id: _books![index].id!);
+                                _load();
+                              },
                             ),
                           ),
                   ),
@@ -170,8 +175,11 @@ class _HomeScreenState extends State<HomeScreen>
                                       padding: const EdgeInsets.all(16.0),
                                       child: TextField(
                                         controller: _titleController,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Title',
+                                        decoration:
+                                            'Title'.generateInputDecoration(
+                                          onPressed: () => setState(
+                                            () => _titleController.clear(),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -179,8 +187,11 @@ class _HomeScreenState extends State<HomeScreen>
                                       padding: const EdgeInsets.all(16.0),
                                       child: TextField(
                                         controller: _authorController,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Author',
+                                        decoration:
+                                            'Author'.generateInputDecoration(
+                                          onPressed: () => setState(
+                                            () => _authorController.clear(),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -189,8 +200,14 @@ class _HomeScreenState extends State<HomeScreen>
                                       child: TextField(
                                         controller: _releasedController,
                                         readOnly: true,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Year',
+                                        decoration:
+                                            'Year'.generateInputDecoration(
+                                          onPressed: () => setState(
+                                            () {
+                                              _releasedController.clear();
+                                              _releaseDate = null;
+                                            },
+                                          ),
                                         ),
                                         onTap: () {
                                           _selectDate(
@@ -209,8 +226,11 @@ class _HomeScreenState extends State<HomeScreen>
                                       padding: const EdgeInsets.all(16.0),
                                       child: TextField(
                                         controller: _titleController,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Title',
+                                        decoration:
+                                            'Title'.generateInputDecoration(
+                                          onPressed: () => setState(
+                                            () => _titleController.clear(),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -218,8 +238,11 @@ class _HomeScreenState extends State<HomeScreen>
                                       padding: const EdgeInsets.all(16.0),
                                       child: TextField(
                                         controller: _authorController,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Author',
+                                        decoration:
+                                            'Author'.generateInputDecoration(
+                                          onPressed: () => setState(
+                                            () => _authorController.clear(),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -228,8 +251,14 @@ class _HomeScreenState extends State<HomeScreen>
                                       child: TextField(
                                         controller: _releasedController,
                                         readOnly: true,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Year',
+                                        decoration:
+                                            'Year'.generateInputDecoration(
+                                          onPressed: () => setState(
+                                            () {
+                                              _releasedController.clear();
+                                              _releaseDate = null;
+                                            },
+                                          ),
                                         ),
                                         onTap: () {
                                           _selectDate(
@@ -254,9 +283,12 @@ class _HomeScreenState extends State<HomeScreen>
                                         Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: TextField(
-                                            controller: _releasedController,
-                                            decoration: const InputDecoration(
-                                              hintText: 'Author',
+                                            controller: _authorController,
+                                            decoration: 'Author'
+                                                .generateInputDecoration(
+                                              onPressed: () => setState(
+                                                () => _authorController.clear(),
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -269,9 +301,15 @@ class _HomeScreenState extends State<HomeScreen>
                                                 child: TextField(
                                                   controller: _startController,
                                                   readOnly: true,
-                                                  decoration:
-                                                      const InputDecoration(
-                                                    hintText: 'Start Date',
+                                                  decoration: 'Start Date'
+                                                      .generateInputDecoration(
+                                                    onPressed: () => setState(
+                                                      () {
+                                                        _startController
+                                                            .clear();
+                                                        _startDate = null;
+                                                      },
+                                                    ),
                                                   ),
                                                   onTap: () {
                                                     _selectDate(
@@ -290,9 +328,14 @@ class _HomeScreenState extends State<HomeScreen>
                                                 child: TextField(
                                                   controller: _endController,
                                                   readOnly: true,
-                                                  decoration:
-                                                      const InputDecoration(
-                                                    hintText: 'End Date',
+                                                  decoration: 'End Date'
+                                                      .generateInputDecoration(
+                                                    onPressed: () => setState(
+                                                      () {
+                                                        _endController.clear();
+                                                        _endDate = null;
+                                                      },
+                                                    ),
                                                   ),
                                                   onTap: () {
                                                     _selectDate(
@@ -313,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen>
                               ],
                             ),
                           ),
-                          FullButton(
+                          FullButtonWidget(
                             title: 'Submit',
                             backgroundColor: Colors.blue,
                             onPressed: () async {
@@ -326,7 +369,6 @@ class _HomeScreenState extends State<HomeScreen>
                                   );
 
                                   _clear();
-
                                   _load();
                                   break;
                                 case 1:
@@ -338,16 +380,15 @@ class _HomeScreenState extends State<HomeScreen>
                                   );
 
                                   _clear();
-
                                   _load();
                                   break;
                                 case 2:
-                                  //TODO: Filter content.
+                                  _load();
                                   break;
                               }
                             },
                           ),
-                          FullButton(
+                          FullButtonWidget(
                             title: 'Clear',
                             backgroundColor: Colors.black,
                             onPressed: () => _clear(),
