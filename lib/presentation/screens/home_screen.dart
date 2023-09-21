@@ -52,13 +52,12 @@ class _HomeScreenState extends State<HomeScreen>
   void _load() async {
     _books = null;
 
-    // _books = await _graphQLService.getBooks(limit: 10);
     List<BookModel> books = await _graphQLService.books(
       limit: 10,
+      ids: _ids.isEmpty ? null : _ids,
+      author: _authorController.text.isEmpty ? null : _authorController.text,
       startDate: _startDate,
       endDate: _endDate,
-      ids: _ids,
-      author: _authorController.text.isEmpty ? null : _authorController.text,
     );
 
     setState(() => _books = books);

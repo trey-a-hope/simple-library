@@ -11,15 +11,15 @@ const typeDefs = `#graphql
         year: String
     }
 
-    input BookFilters {
-        author: String
+    input BookFilter {
         ids: [ID!]
+        author: String
         startDate: String
         endDate: String
     }
 
     input BookFiltersInput {
-        filter: BookFilters
+        filter: BookFilter
         limit: Int
     }
 
@@ -49,42 +49,28 @@ const resolvers = {
         async getBooks(_, { limit }) {
             return await Book.find().limit(limit);
         },
-        async books(parent, args, context, info) {
-            // Extract the filter value from the args param.
+        async books(_, args) {
             const { filter } = args.input;
-            // Extract the limit value from the args param.
             const { limit } = args;
-            //Only apply filters if some are passed into query.
-            const shouldApplyFilters = filter != null;
-            if (!shouldApplyFilters) {
+            const shouldApplyFilter = filter != null;
+            if (!shouldApplyFilter) {
                 return await Book.find().limit(limit);
             }
-            //Apply author filter if applicable.
-            const shouldApplyAuthorFilter = filter['author'] != null;
-            if (shouldApplyAuthorFilter) {
-                // Return books that were written by said author.
-                return await Book.find({ "author": filter.author });
-            }
-            //Apply ids filter if applicable.
-            const shouldApplyIdsFilter = filter.ids;
-            if (shouldApplyIdsFilter) {
-                // Extract ids from filter objects.
+            const shouldApplyIDsFilter = filter.ids != null;
+            if (shouldApplyIDsFilter) {
                 let ids = filter.ids;
-                // Remove any strings that are not formatted correctly.
                 ids = ids.filter(id => Types.ObjectId.isValid(id));
-                // Return books that have these ids.
                 return await Book.find({ "_id": { "$in": ids } });
             }
-            //Apply date filter if applicable.
-            const shouldApplyDateFilter = filter.startDate != null && filter.endDate != null;
-            if (shouldApplyDateFilter) {
-                // Extract dates from filter object.
+            const shouldApplyAuthorFilter = filter.author != null;
+            if (shouldApplyAuthorFilter) {
+                return await Book.find({ "author": filter.author });
+            }
+            const shouldApplyDateRangeFilter = filter.startDate != null && filter.endDate != null;
+            if (shouldApplyDateRangeFilter) {
                 let startDate = filter.startDate;
                 let endDate = filter.endDate;
-                // Return books that are between the start and end date.
-                return await Book.find({
-                    "year": { "$gte": startDate, "$lte": endDate }
-                });
+                return await Book.find({ "year": { "$gte": startDate, "$lte": endDate } });
             }
         }
     },

@@ -145,59 +145,51 @@ class GraphQLService {
 
   Future<List<BookModel>> books({
     int? limit,
+    List<String>? ids,
+    String? author,
     DateTime? startDate,
     DateTime? endDate,
-    String? author,
-    List<String> ids = const [],
   }) async {
-    var input = {};
-    var filter = {};
-
-    bool shouldAddLimit = limit != null;
-
-    bool shouldAddFilter = !(startDate == null &&
-        endDate == null &&
-        author == null &&
-        ids.isEmpty);
-
-    if (shouldAddLimit) {
-      // Add limit to the input map.
-      input.addAll({'limit': limit});
-    }
-
-    if (shouldAddFilter) {
-      // If filtering on start and end date...
-      if (startDate != null && endDate != null) {
-        filter.addAll({
-          "endDate": endDate.toIso8601String(),
-          "startDate": startDate.toIso8601String(),
-        });
-      }
-
-      // If filtering on author.
-      if (author != null) {
-        filter.addAll({
-          "author": author,
-        });
-      }
-
-      // If filtering on ids.
-      if (ids.isNotEmpty) {
-        filter.addAll({
-          "ids": ids,
-        });
-      }
-
-      // Add filters to the input map.
-      input.addAll({'filter': filter});
-    }
-
     try {
+      var input = {};
+      var filter = {};
+
+      bool shouldApplyLimit = limit != null;
+      if (shouldApplyLimit) {
+        input.addAll({"limit": limit});
+      }
+
+      bool shouldApplyFilter = !(ids == null &&
+          author == null &&
+          startDate == null &&
+          endDate == null);
+      if (shouldApplyFilter) {
+        bool shouldApplyIDsFilter = ids != null;
+        if (shouldApplyIDsFilter) {
+          filter.addAll({"ids": ids});
+        }
+
+        bool shouldApplyAuthorFilter = author != null;
+        if (shouldApplyAuthorFilter) {
+          filter.addAll({"author": author});
+        }
+
+        bool shouldApplyDateRangeFilter = startDate != null && endDate != null;
+        if (shouldApplyDateRangeFilter) {
+          filter.addAll({
+            "startDate": startDate.toIso8601String(),
+            "endDate": endDate.toIso8601String()
+          });
+        }
+
+        input.addAll({"filter": filter});
+      }
+
       QueryResult result = await client.query(
         QueryOptions(
           fetchPolicy: FetchPolicy.noCache,
           document: gql("""
-            query Query(\$input: BookFiltersInput) {
+           query Query(\$input: BookFiltersInput) {
               books(input: \$input) {
                 _id
                 author
